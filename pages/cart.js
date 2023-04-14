@@ -60,7 +60,7 @@ function CartScreen() {
                     </td>
                     <td className="p-5 text-right">
                       <select
-                        vaue={item.quantity}
+                        value={item.quantity}
                         onChange={(e) =>
                           updateCartHandler(item, e.target.value)
                         }
@@ -94,7 +94,7 @@ function CartScreen() {
               <li>
                 <button
                   className="roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500 w-full"
-                  onClick={() => router.push('/shipping')}
+                  onClick={() => router.push('login?redirect/shipping')}
                 >
                   Check out
                 </button>
