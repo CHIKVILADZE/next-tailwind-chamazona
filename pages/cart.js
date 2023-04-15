@@ -27,7 +27,10 @@ function CartScreen() {
       <h1 className="mb-4 text-xl">Shopping Cart</h1>
       {cartItems.length === 0 ? (
         <div>
-          Cart is empty. <Link href="/">Go shopping</Link>
+          Cart is empty.{' '}
+          <Link href="/">
+            <span className="text-blue-700">Go shopping</span>
+          </Link>
         </div>
       ) : (
         <div className="grid md:grid-cols-4">
@@ -94,7 +97,7 @@ function CartScreen() {
               <li>
                 <button
                   className="roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500 w-full"
-                  onClick={() => router.push('login?redirect/shipping')}
+                  onClick={() => router.push('login?redirect=/shipping')}
                 >
                   Check out
                 </button>
