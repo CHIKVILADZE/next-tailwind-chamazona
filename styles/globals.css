@@ -30,13 +30,13 @@ body {
   box-sizing: border-box;
 }
 
-.card {
-  @layer mb-5 block rounded-lg border border-gray-200 shadow-md;
+/* .card {
+  @apply mb-5 block rounded-lg border border-gray-200 shadow-md;
 }
 
 .primary-button {
-  @layer roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500;
-}
+  @apply roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500;
+}*/
 
 input,
 select,
