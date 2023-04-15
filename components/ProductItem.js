@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import React from 'react';
 
-export default function ProductItems({ product }) {
+export default function ProductItems({ product, addToCartHandler }) {
   return (
     <div className="mb-5 block rounded-lg border border-gray-200 shadow-md">
       <Link href={`/product/${product.slug}`}>
@@ -21,6 +21,7 @@ export default function ProductItems({ product }) {
         <button
           className="roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500 "
           type="button"
+          onClick={() => addToCartHandler(product)}
         >
           Add to cart
         </button>
