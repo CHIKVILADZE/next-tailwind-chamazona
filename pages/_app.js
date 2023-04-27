@@ -11,7 +11,7 @@ export default function App({
     <SessionProvider session={session}>
       <StoreProvider>
         {Component.auth ? (
-          <Auth>
+          <Auth adminOnly={Component.auth.adminOnly}>
             <Component {...pageProps} />
           </Auth>
         ) : (

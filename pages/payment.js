@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import CheckoutWizard from '@/components/CheckoutWizard';
 import { useRouter } from 'next/router';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Store } from '@/utils/Store';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
@@ -11,7 +10,7 @@ export default function PaymentScreen() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const { state, dispatch } = useContext(Store);
   const { cart } = state;
-  const { shippingAdress, paymentMethod } = cart;
+  const { shippingAddress, paymentMethod } = cart;
 
   const router = useRouter();
   const submitHandler = (e) => {
@@ -31,11 +30,11 @@ export default function PaymentScreen() {
   };
 
   useEffect(() => {
-    if (!shippingAdress.adress) {
+    if (!shippingAddress.address) {
       return router.push('/shipping');
     }
     setSelectedPaymentMethod(paymentMethod || '');
-  }, [paymentMethod, router, shippingAdress.adress]);
+  }, [paymentMethod, router, shippingAddress.address]);
 
   return (
     <Layout title="Payment Method">
@@ -65,7 +64,10 @@ export default function PaymentScreen() {
           >
             Back
           </button>
-          <button className="roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500;">
+          <button
+            type="submit"
+            className="roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500;"
+          >
             Next
           </button>
         </div>
@@ -73,3 +75,4 @@ export default function PaymentScreen() {
     </Layout>
   );
 }
+PaymentScreen.auth = true;

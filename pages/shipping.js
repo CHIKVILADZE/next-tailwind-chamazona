@@ -17,29 +17,29 @@ export default function ShippingScreen() {
 
   const { state, dispatch } = useContext(Store);
   const { cart } = state;
-  const { shippingAdress } = cart;
+  const { shippingAddress } = cart;
   const router = useRouter();
 
   useEffect(() => {
-    setValue('fullName', shippingAdress.fullName);
-    setValue('adress', shippingAdress.adress);
-    setValue('city', shippingAdress.city);
-    setValue('postalCode', shippingAdress.postalCode);
-    setValue('country', shippingAdress.country);
-  }, [setValue, shippingAdress]);
+    setValue('fullName', shippingAddress.fullName);
+    setValue('address', shippingAddress.address);
+    setValue('city', shippingAddress.city);
+    setValue('postalCode', shippingAddress.postalCode);
+    setValue('country', shippingAddress.country);
+  }, [setValue, shippingAddress]);
 
-  const submitHandler = ({ fullName, adress, city, postalCode, country }) => {
+  const submitHandler = ({ fullName, address, city, postalCode, country }) => {
     dispatch({
-      type: 'SAVE_SHIPPING_ADRESS',
-      payload: { fullName, adress, city, postalCode, country },
+      type: 'SAVE_SHIPPING_ADDRESS',
+      payload: { fullName, address, city, postalCode, country },
     });
     Cookies.set(
       'cart',
       JSON.stringify({
         ...cart,
-        shippingAdress: {
+        shippingAddress: {
           fullName,
-          adress,
+          address,
           city,
           postalCode,
           country,
@@ -50,13 +50,13 @@ export default function ShippingScreen() {
   };
 
   return (
-    <Layout title="Shipping Adress">
+    <Layout title="Shipping Address">
       <CheckoutWizard activeStep={1} />
       <form
         className="mx-auto max-w-screen-md"
         onSubmit={handleSubmit(submitHandler)}
       >
-        <h1 className="mb-4 text-xl">Shipping Adress</h1>
+        <h1 className="mb-4 text-xl">Shipping Address</h1>
         <div className="mb-4">
           <label htmlFor="fullName">Full Name</label>
           <input
@@ -70,18 +70,18 @@ export default function ShippingScreen() {
           )}
         </div>
         <div className="mb-4">
-          <label htmlFor="adress">Adress</label>
+          <label htmlFor="address">Adress</label>
           <input
             className="w-full"
-            id="adress"
+            id="address"
             autoFocus
-            {...register('adress', {
-              required: 'Please enter adress',
+            {...register('address', {
+              required: 'Please enter address',
               minLength: { value: 3, message: 'Adress is more than 2 chars' },
             })}
           />
-          {errors.adress && (
-            <div className="text-red-500">{errors.adress.message}</div>
+          {errors.address && (
+            <div className="text-red-500">{errors.address.message}</div>
           )}
         </div>
         <div className="mb-4">

@@ -12,6 +12,7 @@ export default NextAuth({
     async jwt({ token, user }) {
       if (user?._id) token._id = user._id;
       if (user?.isAdmin) token.isAdmin = user.isAdmin;
+      console.log('HEEEY', token);
       return token;
     },
     async session({ session, token }) {
@@ -33,7 +34,7 @@ export default NextAuth({
             _id: user._id,
             name: user.name,
             email: user.email,
-            image: 'fg',
+            image: 'f',
             isAdmin: user.isAdmin,
           };
         }
