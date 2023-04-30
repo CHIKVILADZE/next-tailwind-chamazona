@@ -1,6 +1,6 @@
 import bcryptjs from 'bcryptjs';
-import User from '@/models/User';
-import db from '@/utils/db';
+import User from '../../../models/User';
+import db from '../../../utils/db';
 
 async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,11 +19,12 @@ async function handler(req, res) {
     });
     return;
   }
+
   await db.connect();
 
   const existingUser = await User.findOne({ email: email });
   if (existingUser) {
-    res.status(422).json({ message: 'User exists already!!!' });
+    res.status(422).json({ message: 'User exists already!' });
     await db.disconnect();
     return;
   }
@@ -35,7 +36,7 @@ async function handler(req, res) {
     isAdmin: false,
   });
 
-  const user = newUser.save();
+  const user = await newUser.save();
   await db.disconnect();
   res.status(201).send({
     message: 'Created user!',
