@@ -1,31 +1,31 @@
-import Layout from '@/components/Layout';
-import React from 'react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useContext } from 'react';
-import { Store } from '@/utils/Store';
-import db from '@/utils/db';
-import Product from '@/models/Product';
 import axios from 'axios';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useContext } from 'react';
 import { toast } from 'react-toastify';
+import Layout from '../../components/Layout';
+import Product from '../../models/Product';
+import db from '../../utils/db';
+import { Store } from '../../utils/Store';
 
 export default function ProductScreen(props) {
   const { product } = props;
   const { state, dispatch } = useContext(Store);
   const router = useRouter();
-
   if (!product) {
-    return <Layout title="Product not found">Product Not Found</Layout>;
+    return <Layout title="Produt Not Found">Produt Not Found</Layout>;
   }
+
   const addToCartHandler = async () => {
     const existItem = state.cart.cartItems.find((x) => x.slug === product.slug);
     const quantity = existItem ? existItem.quantity + 1 : 1;
     const { data } = await axios.get(`/api/products/${product._id}`);
 
     if (data.countInStock < quantity) {
-      return toast.error('Sorry. Product is out of stock!!!');
+      return toast.error('Sorry. Product is out of stock');
     }
+
     dispatch({ type: 'CART_ADD_ITEM', payload: { ...product, quantity } });
     router.push('/cart');
   };
@@ -42,7 +42,11 @@ export default function ProductScreen(props) {
             alt={product.name}
             width={640}
             height={640}
-            layout="responsive"
+            sizes="100vw"
+            style={{
+              width: '100%',
+              height: 'auto',
+            }}
           ></Image>
         </div>
         <div>
@@ -69,7 +73,7 @@ export default function ProductScreen(props) {
               <div>{product.countInStock > 0 ? 'In stock' : 'Unavailable'}</div>
             </div>
             <button
-              className="roundned bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500 w-full"
+              className="roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500 w-full"
               onClick={addToCartHandler}
             >
               Add to cart

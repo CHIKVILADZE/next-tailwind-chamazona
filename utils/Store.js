@@ -62,7 +62,6 @@ function reducer(state, action) {
           paymentMethod: action.payload,
         },
       };
-
     default:
       return state;
   }

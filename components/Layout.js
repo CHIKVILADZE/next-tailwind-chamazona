@@ -13,7 +13,7 @@ import Cookies from 'js-cookie';
 
 export default function Layout({ title, children }) {
   const { status, data: session } = useSession();
-  console.log(session);
+  console.log('Hello', session);
 
   const { state, dispatch } = useContext(Store);
   const { cart } = state;

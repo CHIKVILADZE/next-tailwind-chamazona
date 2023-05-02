@@ -1,12 +1,13 @@
-import Layout from '@/components/Layout';
-import { getError } from '@/utils/error';
 import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import axios from 'axios';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 import { toast } from 'react-toastify';
+import Layout from '../../components/Layout';
+import { getError } from '../../utils/error';
 
 function reducer(state, action) {
   switch (action.type) {
@@ -24,37 +25,48 @@ function reducer(state, action) {
       return { ...state, loadingPay: false, errorPay: action.payload };
     case 'PAY_RESET':
       return { ...state, loadingPay: false, successPay: false, errorPay: '' };
+
+    case 'DELIVER_REQUEST':
+      return { ...state, loadingDeliver: true };
+    case 'DELIVER_SUCCESS':
+      return { ...state, loadingDeliver: false, successDeliver: true };
+    case 'DELIVER_FAIL':
+      return { ...state, loadingDeliver: false };
+    case 'DELIVER_RESET':
+      return {
+        ...state,
+        loadingDeliver: false,
+        successDeliver: false,
+      };
+
     default:
       state;
   }
 }
-
-export default function OrderScreen() {
+function OrderScreen() {
+  const { data: session } = useSession();
+  // order/:id
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
+
   const { query } = useRouter();
   const orderId = query.id;
 
-  const [{ loading, error, order, successPay, loadingPay }, dispatch] =
-    useReducer(reducer, {
-      loading: true,
-      order: {},
-      error: '',
-    });
-
-  const {
-    shippingAddress,
-    paymentMethod,
-    orderItems,
-    itemsPrice,
-    taxPrice,
-    shippingPrice,
-    totalPrice,
-    isPaid,
-    paidAt,
-    isDelivered,
-    deliveredAt,
-  } = order;
-
+  const [
+    {
+      loading,
+      error,
+      order,
+      successPay,
+      loadingPay,
+      loadingDeliver,
+      successDeliver,
+    },
+    dispatch,
+  ] = useReducer(reducer, {
+    loading: true,
+    order: {},
+    error: '',
+  });
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -65,10 +77,18 @@ export default function OrderScreen() {
         dispatch({ type: 'FETCH_FAIL', payload: getError(err) });
       }
     };
-    if (!order._id || successPay || (order._id && order._id !== orderId)) {
+    if (
+      !order._id ||
+      successPay ||
+      successDeliver ||
+      (order._id && order._id !== orderId)
+    ) {
       fetchOrder();
       if (successPay) {
         dispatch({ type: 'PAY_RESET' });
+      }
+      if (successDeliver) {
+        dispatch({ type: 'DELIVER_RESET' });
       }
     } else {
       const loadPaypalScript = async () => {
@@ -84,7 +104,20 @@ export default function OrderScreen() {
       };
       loadPaypalScript();
     }
-  }, [order, orderId, paypalDispatch, successPay]);
+  }, [order, orderId, paypalDispatch, successDeliver, successPay]);
+  const {
+    shippingAddress,
+    paymentMethod,
+    orderItems,
+    itemsPrice,
+    taxPrice,
+    shippingPrice,
+    totalPrice,
+    isPaid,
+    paidAt,
+    isDelivered,
+    deliveredAt,
+  } = order;
 
   function createOrder(data, actions) {
     return actions.order
@@ -95,8 +128,8 @@ export default function OrderScreen() {
           },
         ],
       })
-      .then((orderId) => {
-        return orderId;
+      .then((orderID) => {
+        return orderID;
       });
   }
 
@@ -109,31 +142,43 @@ export default function OrderScreen() {
           details
         );
         dispatch({ type: 'PAY_SUCCESS', payload: data });
-        toast.success('Order is paid successfully');
+        toast.success('Order is paid successgully');
       } catch (err) {
         dispatch({ type: 'PAY_FAIL', payload: getError(err) });
         toast.error(getError(err));
       }
     });
   }
-
   function onError(err) {
     toast.error(getError(err));
+  }
+
+  async function deliverOrderHandler() {
+    try {
+      dispatch({ type: 'DELIVER_REQUEST' });
+      const { data } = await axios.put(
+        `/api/admin/orders/${order._id}/deliver`,
+        {}
+      );
+      dispatch({ type: 'DELIVER_SUCCESS', payload: data });
+      toast.success('Order is delivered');
+    } catch (err) {
+      dispatch({ type: 'DELIVER_FAIL', payload: getError(err) });
+      toast.error(getError(err));
+    }
   }
 
   return (
     <Layout title={`Order ${orderId}`}>
       <h1 className="mb-4 text-xl">{`Order ${orderId}`}</h1>
       {loading ? (
-        <div>Loading ...</div>
+        <div>Loading...</div>
       ) : error ? (
-        <div className="my-3  rounded-lg bg-red-100 p-3 text-red-700">
-          {error}
-        </div>
+        <div className="alert-error">{error}</div>
       ) : (
         <div className="grid md:grid-cols-4 md:gap-5">
           <div className="overflow-x-auto md:col-span-3">
-            <div className=" mb-5 block rounded-lg border border-gray-200 shadow-md p-5">
+            <div className="card  p-5">
               <h2 className="mb-2 text-lg">Shipping Address</h2>
               <div>
                 {shippingAddress.fullName}, {shippingAddress.address},{' '}
@@ -141,36 +186,30 @@ export default function OrderScreen() {
                 {shippingAddress.country}
               </div>
               {isDelivered ? (
-                <div className=" m-3 rounded-lg bg-green-100 p-3 text-green-700">
-                  Deivered at {deliveredAt}
-                </div>
+                <div className="alert-success">Delivered at {deliveredAt}</div>
               ) : (
-                <div className="my-3  rounded-lg bg-red-100 p-3 text-red-700">
-                  Not delivered
-                </div>
+                <div className="alert-error">Not delivered</div>
               )}
             </div>
+
             <div className=" mb-5 block rounded-lg border border-gray-200 shadow-md p-5">
-              <h2 className="mb-2 text-lg">Payment method</h2>
+              <h2 className="mb-2 text-lg">Payment Method</h2>
               <div>{paymentMethod}</div>
               {isPaid ? (
-                <div className=" m-3 rounded-lg bg-green-100 p-3 text-green-700">
-                  Paid at {paidAt}
-                </div>
+                <div className="alert-success">Paid at {paidAt}</div>
               ) : (
-                <div className="my-3  rounded-lg bg-red-100 p-3 text-red-700">
-                  Not paid
-                </div>
+                <div className="alert-error">Not paid</div>
               )}
             </div>
-            <div className=" mb-5 block rounded-lg border border-gray-200 shadow-md overflow-x p-5">
-              <h2 className="mb-2 text-lg">Order items</h2>
+
+            <div className="card overflow-x-auto p-5">
+              <h2 className="mb-2 text-lg">Order Items</h2>
               <table className="min-w-full">
                 <thead className="border-b">
                   <tr>
                     <th className="px-5 text-left">Item</th>
-                    <th className="p-5 text-right">Quantity</th>
-                    <th className="p-5 text-right">Price</th>
+                    <th className="    p-5 text-right">Quantity</th>
+                    <th className="  p-5 text-right">Price</th>
                     <th className="p-5 text-right">Subtotal</th>
                   </tr>
                 </thead>
@@ -178,24 +217,28 @@ export default function OrderScreen() {
                   {orderItems.map((item) => (
                     <tr key={item._id} className="border-b">
                       <td>
-                        <Link href={`/product/${item.slug}`}>
-                          <div className="flex-items-center">
-                            <Image
-                              src={item.image}
-                              alt={item.name}
-                              width={50}
-                              height={50}
-                            ></Image>
-                            &nbsp;
-                            {item.name}
-                          </div>
+                        <Link
+                          href={`/product/${item.slug}`}
+                          className="flex items-center"
+                        >
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            width={50}
+                            height={50}
+                            style={{
+                              maxWidth: '100%',
+                              height: 'auto',
+                            }}
+                          ></Image>
+                          &nbsp;
+                          {item.name}
                         </Link>
                       </td>
-                      <td className="p-5 text-right">{item.quantity}</td>
+                      <td className=" p-5 text-right">{item.quantity}</td>
                       <td className="p-5 text-right">${item.price}</td>
-
                       <td className="p-5 text-right">
-                        {item.price * item.quantity}
+                        ${item.quantity * item.price}
                       </td>
                     </tr>
                   ))}
@@ -204,8 +247,8 @@ export default function OrderScreen() {
             </div>
           </div>
           <div>
-            <div className="mb-5 block rounded-lg border border-gray-300 shadow-md p-5">
-              <h2 className="mb-2 text-lg">Order summery</h2>
+            <div className="mb-5 block rounded-lg border border-gray-200 shadow-md  p-5">
+              <h2 className="mb-2 text-lg">Order Summary</h2>
               <ul>
                 <li>
                   <div className="mb-2 flex justify-between">
@@ -234,7 +277,7 @@ export default function OrderScreen() {
                 {!isPaid && (
                   <li>
                     {isPending ? (
-                      <div>Loading ...</div>
+                      <div>Loading...</div>
                     ) : (
                       <div className="w-full">
                         <PayPalButtons
@@ -244,7 +287,18 @@ export default function OrderScreen() {
                         ></PayPalButtons>
                       </div>
                     )}
-                    {loadingPay && <div>Loading ...</div>}
+                    {loadingPay && <div>Loading...</div>}
+                  </li>
+                )}
+                {session.user.isAdmin && order.isPaid && !order.isDelivered && (
+                  <li>
+                    {loadingDeliver && <div>Loading...</div>}
+                    <button
+                      className="roundnen bg-amber-300 py-2 px-4 shadow outline-none hover:bg-amber-400 acive:bg-amber-500 w-full"
+                      onClick={deliverOrderHandler}
+                    >
+                      Deliver Order
+                    </button>
                   </li>
                 )}
               </ul>
@@ -257,3 +311,4 @@ export default function OrderScreen() {
 }
 
 OrderScreen.auth = true;
+export default OrderScreen;
